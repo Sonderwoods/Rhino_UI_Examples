@@ -1,16 +1,17 @@
-﻿using Eto.Forms;
-using Rhino;
+﻿using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
@@ -55,10 +56,13 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         public ObservableCollection<BrepItemViewModel> SelectedBreps { get; set; } = new ObservableCollection<BrepItemViewModel>();
 
 
-        public AddBrepViewModel()
+        public void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
         {
-                
+            BrepItemViewModel brepItem = (BrepItemViewModel)((Button)sender).DataContext;
+            Breps.Remove(brepItem);
         }
+
+
 
         public AddBrepViewModel(RhinoDoc doc)
         {
@@ -70,7 +74,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             }
 
             AddHandlers();
-            
+
             //Rhino.Commands.Command.UndoRedo += Command_UndoRedo;
         }
 
@@ -81,6 +85,64 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             RhinoDoc.DeselectObjects += RhinoDoc_SelectObjects;
             RhinoDoc.AddRhinoObject += RhinoDoc_AddObject;
             RhinoDoc.DeleteRhinoObject += RhinoDoc_DeleteObject;
+            Breps.CollectionChanged += Breps_CollectionChanged;
+            SelectedBreps.CollectionChanged += SelectedBreps_CollectionChanged;
+        }
+
+        private void SelectedBreps_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    foreach (BrepItemViewModel item in e.NewItems)
+                    {
+                        RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
+                        obj?.Select(true);
+                    }
+                    RhinoDoc.Views.Redraw();
+                    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    foreach (BrepItemViewModel item in e.OldItems)
+                    {
+                        RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
+                        obj?.Select(false);
+                    }
+                    RhinoDoc.Views.Redraw();
+                    break;
+
+            }
+        }
+
+        private void Breps_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                //case NotifyCollectionChangedAction.Add:
+                //    foreach (BrepItemViewModel item in e.NewItems)
+                //    {
+                //        RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
+                //        obj?.Select(true);
+                //    }
+                //    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    foreach (BrepItemViewModel item in e.OldItems)
+                    {
+                        if(SelectedBreps.Contains(item))
+                        {
+                            SelectedBreps.Remove(item);
+                        }
+
+                        RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
+                        if (obj != null)
+                            RhinoDoc.Objects.Delete(obj.Id, true);
+                    }
+                    RhinoDoc.Views.Redraw();
+                    break;
+
+            }
         }
 
         void RemoveHandlers()
@@ -92,15 +154,26 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         }
 
 
+
+
         private void RhinoDoc_DeleteObject(object sender, RhinoObjectEventArgs e)
         {
-            var item = Breps.Where(b => b.Guid == e.ObjectId).FirstOrDefault();
-            if (item != null)
-            {
-                item.Area = -1;
-                item.Name = "<Missing>";
+            // Keep existing?? 
+            //var item = Breps.Where(b => b.Guid == e.ObjectId).FirstOrDefault();
+            //if (item != null)
+            //{
+            //    item.Area = -1;
+            //    item.Name = "<Missing>";
 
+            //}
+
+            // Or just remove??
+            var item3 = Breps.Where(b => b.Guid == e.ObjectId).FirstOrDefault();
+            if (item3 != null)
+            {
+                Breps.Remove(item3);
             }
+
 
             var item2 = SelectedBreps.Where(b => b.Guid == e.ObjectId).FirstOrDefault();
             if (item2 != null)
@@ -108,20 +181,34 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 SelectedBreps.Remove(item2);
             }
 
+            BrepCount = Breps.Count;
+
         }
 
         private void RhinoDoc_AddObject(object sender, RhinoObjectEventArgs e)
         {
             RhinoObject obj = RhinoDoc.Objects.FindId(e.ObjectId);
-            if (obj.Geometry is Brep)
+            if (obj.Geometry.ObjectType == (obj.Geometry.ObjectType & (ObjectType.Extrusion | ObjectType.Surface | ObjectType.Brep | ObjectType.Mesh)))
             {
-                Breps.Add(new BrepItemViewModel(obj.Id, RhinoDoc));
+                var matchingBrep = Breps.Where(Breps => Breps.Guid == obj.Id).FirstOrDefault();
+
+                if (matchingBrep != null)
+                {
+                    var index = Breps.IndexOf(matchingBrep);
+                    Breps[index].Area = AreaMassProperties.Compute((Brep)obj.Geometry).Area;
+                }
+                else
+                {
+                    Breps.Add(new BrepItemViewModel(obj.Id, RhinoDoc));
+                }
+                
             }
+
+            BrepCount = Breps.Count;
         }
 
         private void RhinoDoc_SelectObjects(object sender, RhinoObjectSelectionEventArgs e)
         {
-
 
             foreach (var item in e.RhinoObjects)
             {
@@ -129,7 +216,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 {
 
                     BrepItemViewModel ii = Breps.Where(b => b.Guid == item.Id).FirstOrDefault();
-                    if (ii != null)
+                    if (ii != null && !SelectedBreps.Contains(ii))
                     {
 
                         SelectedBreps.Add(ii);
