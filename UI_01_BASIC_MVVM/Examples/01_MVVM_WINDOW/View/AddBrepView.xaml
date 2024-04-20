@@ -5,15 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel"
         xmlns:local="clr-namespace:UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View"
-        xmlns:viewmodel="clr-namespace:UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel"
         d:DataContext="{d:DesignInstance d:Type=vm:AddBrepViewModel, IsDesignTimeCreatable=True}"
         mc:Ignorable="d"
         ResizeMode="CanResizeWithGrip"
         SizeToContent="WidthAndHeight"
-        DataContext=""
         Title="AddBrepView"
         Height="450" Width="400">
-
     <Window.Resources>
         <Style x:Key="hiddenHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Visibility" Value="Collapsed" />
@@ -24,6 +21,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
+
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -33,25 +31,25 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Label Grid.Row="1" Grid.Column="1" Content="Breps in the file:"/>
+        <Label Grid.Row="1" Grid.Column="1" Content="{Binding BrepCount, Mode=OneWay}" ContentStringFormat="Breps in the file: {0:0}" d:Content="0"/>
         <ScrollViewer Grid.Row="2" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto" Height="300">
 
-            <ListView x:Name="BrepListView" SelectionMode="Multiple" SelectionChanged="BrepListView_SelectionChanged" ItemsSource="{Binding Breps}" d:ItemsSource="{d:SampleData ItemCount=5}">
+            <ListView x:Name="BrepListView" SelectionMode="Multiple" SelectionChanged="BrepListView_SelectionChanged" ItemsSource="{Binding Breps, Mode=OneWay}" d:ItemsSource="{d:SampleData ItemCount=5}">
                 <!--<ListView.ItemTemplate>
                     <DataTemplate>-->
                 <ListView.View>
-                    <!--<GridView  ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">-->
-                    <GridView >
+                    <GridView  ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
+                    <!--<GridView >-->
 
                         <!-- Here we create what each item should look like -->
                         <GridViewColumn Header="Guid" DisplayMemberBinding="{Binding Guid}"/>
                         <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                        <GridViewColumn Header="Area" DisplayMemberBinding="{Binding Area}"/>
+                        <GridViewColumn Header="Area" DisplayMemberBinding="{Binding Area, StringFormat={}{0:0.0}}"/>
                         <GridViewColumn Header="Delete">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
 
-                                    <Button x:Name="BtnDeleteItem" Content="Delete" Click="BtnDeleteItem_Click" Height="40" />
+                                    <Button x:Name="BtnDeleteItem" Content="Delete" Click="BtnDeleteItem_Click" Height="15" FontSize="8" Padding="1" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
