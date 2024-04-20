@@ -41,6 +41,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View
 
         }
 
+        
+
         protected override void OnClosing(CancelEventArgs e)
         {
             //ViewModel?.Dispose();
@@ -54,8 +56,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View
 
         private void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
         {
-            BrepItemViewModel brepItem = (BrepItemViewModel)((Button)sender).DataContext;
-            ViewModel.Breps.Remove(brepItem);
+            ViewModel.BtnDeleteItem_Click(sender, e);
         }
 
    
