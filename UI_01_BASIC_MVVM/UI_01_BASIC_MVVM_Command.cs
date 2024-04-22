@@ -29,11 +29,8 @@ namespace UI_01_BASIC_MVVM
 
             var window = new AddBrepView(doc);
 
-
+            
             window.Show();
-
-            var window2 = new Window1();
-            window2.Show();
 
             return Result.Success;
         }

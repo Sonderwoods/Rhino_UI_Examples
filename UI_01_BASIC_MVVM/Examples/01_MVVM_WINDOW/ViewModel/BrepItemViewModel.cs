@@ -30,7 +30,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// </summary>
         public Guid Guid { get; set; }
 
-        
+
 
         /// <summary>
         /// This is a dependencyproperty and will update the UI when changed.
@@ -59,6 +59,48 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         public static readonly DependencyProperty NameProperty =
             DependencyProperty.Register("Name", typeof(string), typeof(BrepItemViewModel), new PropertyMetadata("Unnamed"));
 
+
+        public static BrepItemViewModel FromGuid(Guid guid, RhinoDoc document)
+        {
+
+            BrepItemViewModel it = new BrepItemViewModel(guid, document);
+            if (document != null)
+            {
+                RhinoObject obj = document.Objects.Find(guid);
+                if (obj != null)
+                {
+                    it.Guid = obj.Id;
+                    it.Name = obj.Name ?? string.Empty;
+
+                    switch (obj.Geometry)
+                    {
+                        case Brep brep:
+                            it.Area = AreaMassProperties.Compute(brep, true, false, false, false).Area;
+                            break;
+
+                        case Mesh mesh:
+                            it.Area = AreaMassProperties.Compute(mesh).Area;
+                            break;
+
+                        case Extrusion extrusion:
+                            it.Area = AreaMassProperties.Compute(extrusion).Area;
+                            break;
+
+                        case Surface surface:
+                            it.Area = AreaMassProperties.Compute(surface).Area;
+                            break;
+
+                    }
+
+                    return it;
+                }
+
+                return null;
+
+            }
+
+            return null;
+        }
 
 
         public BrepItemViewModel(Guid guid, RhinoDoc document)
