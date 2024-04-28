@@ -59,7 +59,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         public static readonly DependencyProperty NameProperty =
             DependencyProperty.Register("Name", typeof(string), typeof(BrepItemViewModel), new PropertyMetadata("Unnamed"));
 
-
+        // TODO: Async?
         public static BrepItemViewModel FromGuid(Guid guid, RhinoDoc document)
         {
 

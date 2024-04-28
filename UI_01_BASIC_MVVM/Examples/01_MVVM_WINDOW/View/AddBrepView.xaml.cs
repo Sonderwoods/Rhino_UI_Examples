@@ -42,10 +42,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View
             ViewModel.BrepListView_SelectionChanged(sender, e);
         }
 
-        private void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.BtnDeleteItem_Click(sender, e);
-        }
+        //private void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
+        //{
+        //    ViewModel.BtnDeleteItem_Click(sender, e);
+        //}
 
    
     }

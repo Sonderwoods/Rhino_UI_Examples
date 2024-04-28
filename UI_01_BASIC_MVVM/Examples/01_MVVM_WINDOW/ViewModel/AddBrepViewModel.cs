@@ -68,20 +68,16 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// As a point of departure it should never contain any brep that is not part of the Breps collection.
         /// </summary>
         public ObservableCollection<BrepItemViewModel> SelectedBreps { get; set; } = new ObservableCollection<BrepItemViewModel>();
+        
 
-
-
+        // Commands
         public RelayCommand DeleteBrepCommand { get; set; }
 
-        /// <summary>
-        /// This is bad MVVM behavior, we should use a command instead.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
+   
+        void DeleteGuid(BrepItemViewModel item)
         {
-            BrepItemViewModel brepItem = (BrepItemViewModel)((Button)sender).DataContext;
-            Breps.Remove(brepItem);
+            if (Breps.Contains(item))
+                Breps.Remove(item);
         }
 
 
@@ -97,16 +93,12 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     Breps.Add(item);
             }
 
-            DeleteBrepCommand = new RelayCommand(() =>
-            {
-                foreach (var item in SelectedBreps)
-                {
-                    RhinoDoc.Objects.Delete(item.Guid, true);
-                }
-            });
+            DeleteBrepCommand = new RelayCommand((sender) => DeleteGuid((BrepItemViewModel)sender));
 
             AddHandlers();
 
+
+            // TODO:
             //Rhino.Commands.Command.UndoRedo += Command_UndoRedo;
         }
 

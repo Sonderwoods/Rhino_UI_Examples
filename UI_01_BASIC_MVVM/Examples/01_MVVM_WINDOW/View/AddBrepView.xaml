@@ -44,7 +44,7 @@
                         <GridViewColumn Header="Delete">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button x:Name="BtnDeleteItem" Content="Delete" Click="BtnDeleteItem_Click" Height="15" FontSize="8" Padding="1" />
+                                    <Button x:Name="BtnDeleteItem" Content="Delete" Command="{Binding DeleteBrepCommand}" CommandParameter="{Binding}" Height="15" FontSize="8" Padding="1" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
