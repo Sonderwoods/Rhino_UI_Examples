@@ -56,6 +56,16 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         }
         // END PROPFULL
 
+        private int selectedBrepCount;
+
+        public int SelectedBrepCount
+        {
+            get { return selectedBrepCount; }
+            set { SetProperty(ref selectedBrepCount, value); }
+        }
+
+
+
 
         /// <summary>
         /// This is the collection of breps that we will bind to in the xaml.
@@ -91,6 +101,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         {
             RhinoDoc = doc;
 
+            // Add event handlers. Must be done before populating the Breps list, otherwise BrepCount wont be updated.
+            RegistrerEventHandlers();
+
+
             foreach (var brep in doc.Objects.FindByObjectType(ObjectType.Brep | ObjectType.Surface | ObjectType.Mesh | ObjectType.Extrusion))
             {
                 var item = BrepItemViewModel.FromGuid(brep.Id, doc);
@@ -98,22 +112,26 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     Breps.Add(item);
             }
 
-            DeleteBrepCommand = new RelayCommand((sender) => DeleteGuid((BrepItemViewModel)sender));
+            InitializeCommands();
 
-            AddHandlers();
 
 
             // TODO:
             //Rhino.Commands.Command.UndoRedo += Command_UndoRedo;
         }
 
+        private void InitializeCommands()
+        {
+            DeleteBrepCommand = new RelayCommand((sender) => DeleteGuid((BrepItemViewModel)sender));
+        }
+
         /// <summary>
         /// Adds the event handlers to the RhinoDoc
         /// </summary>
-        private void AddHandlers()
+        private void RegistrerEventHandlers()
         {
             // First we remove all handlers to avoid duplicates
-            RemoveHandlers();
+            UnregistrerEventHandlers();
 
             // Subscribing to changes in RhinoDoc
             RhinoDoc.SelectObjects += RhinoDoc_SelectObjects;
@@ -138,7 +156,6 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 item.IsSelected = false;
             }
 
-            //   throw new NotImplementedException();
         }
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
@@ -149,7 +166,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <summary>
         /// Removes the event handlers from the RhinoDoc
         /// </summary>
-        void RemoveHandlers()
+        void UnregistrerEventHandlers()
         {
             RhinoDoc.SelectObjects -= RhinoDoc_SelectObjects;
             RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAll;
@@ -172,6 +189,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <param name="e"></param>
         private void SelectedBreps_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+
+            SelectedBrepCount = SelectedBreps.Count;
 
             // What is changed?
             switch (e.Action)
@@ -226,13 +245,14 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             // What is changed?
             switch (e.Action)
             {
-                //case NotifyCollectionChangedAction.Add:
-                //    foreach (BrepItemViewModel item in e.NewItems)
-                //    {
-                //        RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
-                //        obj?.Select(true);
-                //    }
-                //    break;
+                case NotifyCollectionChangedAction.Add:
+                    //BrepCount = Breps.Count;
+                    //foreach (BrepItemViewModel item in e.NewItems)
+                    //{
+                    //    RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
+                    //    obj?.Select(true);
+                    //}
+                    break;
 
 
                 // We removed a brep from the collection -> Remove from selected collection
@@ -263,6 +283,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                         }
                     }
 
+                    //brepCount = Breps.Count;
+
                     // Remember to redraw the view for more smooth interaction
                     RhinoDoc.Views.Redraw();
                     break;
@@ -273,6 +295,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     break;
 
             }
+
+            BrepCount = Breps.Count;
+            SelectedBrepCount = SelectedBreps.Count;
+            
         }
 
         /// <summary>
@@ -391,10 +417,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     BrepItemViewModel ii = Breps.Where(b => b.Guid == item.Id).FirstOrDefault();
                     if (ii != null && !SelectedBreps.Contains(ii))
                     {
-                        
+
                         // Add to the selected collection which should update UI with the listview binding
-                        
-                            SelectedBreps.Add(ii); // here was my NULL error??? list is null
+
+                        SelectedBreps.Add(ii); // here was my NULL error??? list is null
 
                     }
                 }
@@ -404,10 +430,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     BrepItemViewModel iii = SelectedBreps.Where(b => b.Guid == item.Id).FirstOrDefault();
                     if (iii != null && SelectedBreps.Contains(iii))
                     {
-                        
+
                         // Remove from the selected collection which should update UI with the listview binding
-                        
-                            SelectedBreps.Remove(iii);
+
+                        SelectedBreps.Remove(iii);
                     }
                 }
             }
@@ -486,7 +512,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
         public void Dispose()
         {
-            RemoveHandlers();
+            UnregistrerEventHandlers();
         }
     }
 }
