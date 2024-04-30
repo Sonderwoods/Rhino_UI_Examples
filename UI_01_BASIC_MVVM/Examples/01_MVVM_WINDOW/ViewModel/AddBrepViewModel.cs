@@ -60,24 +60,29 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <summary>
         /// This is the collection of breps that we will bind to in the xaml.
         /// It will contain all the breps in the RhinoDoc
+        /// Handling happens here <see cref="Breps_CollectionChanged(object, NotifyCollectionChangedEventArgs)"/>
         /// </summary>
         public ObservableCollection<BrepItemViewModel> Breps { get; set; } = new ObservableCollection<BrepItemViewModel>();
 
         /// <summary>
         /// This is the collection of selected breps that we will bind to in the xaml.
         /// As a point of departure it should never contain any brep that is not part of the Breps collection.
+        /// Handling happens here <see cref="select"/>
         /// </summary>
         public ObservableCollection<BrepItemViewModel> SelectedBreps { get; set; } = new ObservableCollection<BrepItemViewModel>();
-        
+
 
         // Commands
         public RelayCommand DeleteBrepCommand { get; set; }
 
-   
+
         void DeleteGuid(BrepItemViewModel item)
         {
             if (Breps.Contains(item))
+            {
                 Breps.Remove(item);
+
+            }
         }
 
 
@@ -112,14 +117,33 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
             // Subscribing to changes in RhinoDoc
             RhinoDoc.SelectObjects += RhinoDoc_SelectObjects;
-            RhinoDoc.DeselectObjects += RhinoDoc_SelectObjects;
+            RhinoDoc.DeselectObjects += RhinoDoc_SelectObjects; // triggered if unselected while still have some selection
+            RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAll;
             RhinoDoc.AddRhinoObject += RhinoDoc_AddObject;
             RhinoDoc.DeleteRhinoObject += RhinoDoc_DeleteObject;
             RhinoDoc.ModifyObjectAttributes += RhinoDoc_ModifyObjectAttributes;
+            RhinoDoc.UndeleteRhinoObject += RhinoDoc_UndeleteRhinoObject;
 
             // Subscribing to changes in the collections
             Breps.CollectionChanged += Breps_CollectionChanged;
             SelectedBreps.CollectionChanged += SelectedBreps_CollectionChanged;
+        }
+
+        private void RhinoDoc_DeselectAll(object sender, RhinoDeselectAllObjectsEventArgs e)
+        {
+            SelectedBreps.Clear();
+
+            foreach (var item in Breps)
+            {
+                item.IsSelected = false;
+            }
+
+            //   throw new NotImplementedException();
+        }
+
+        private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            RhinoDoc_AddObject(sender, e);
         }
 
         /// <summary>
@@ -128,10 +152,12 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         void RemoveHandlers()
         {
             RhinoDoc.SelectObjects -= RhinoDoc_SelectObjects;
-            RhinoDoc.DeselectObjects -= RhinoDoc_SelectObjects;
+            RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAll;
+            RhinoDoc.DeselectObjects -= RhinoDoc_SelectObjects; //triggered if unselected while still have some selection
             RhinoDoc.AddRhinoObject -= RhinoDoc_AddObject;
             RhinoDoc.DeleteRhinoObject -= RhinoDoc_DeleteObject;
             RhinoDoc.ModifyObjectAttributes -= RhinoDoc_ModifyObjectAttributes;
+            RhinoDoc.UndeleteRhinoObject -= RhinoDoc_UndeleteRhinoObject;
 
             Breps.CollectionChanged -= Breps_CollectionChanged;
             SelectedBreps.CollectionChanged -= SelectedBreps_CollectionChanged;
@@ -153,7 +179,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
                 // We selected in the UI -> Added to collection -> Select in Rhino
                 case NotifyCollectionChangedAction.Add:
-                    RhinoApp.WriteLine("SelectedBreps_CollectionChanged Add");
+                    //RhinoApp.WriteLine("SelectedBreps_CollectionChanged Add");
                     foreach (BrepItemViewModel item in e.NewItems)
                     {
                         RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
@@ -166,7 +192,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
                 // We deselected in the UI -> Removed from collection -> Deselect in Rhino
                 case NotifyCollectionChangedAction.Remove:
-                    RhinoApp.WriteLine("SelectedBreps_CollectionChanged Remove");
+                    //RhinoApp.WriteLine("SelectedBreps_CollectionChanged Remove");
                     foreach (BrepItemViewModel item in e.OldItems)
                     {
                         RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
@@ -223,7 +249,18 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                         RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
 
                         if (obj != null)
-                            RhinoDoc.Objects.Delete(obj.Id, true);
+                        {
+                            // Start undo record
+                            uint undo = RhinoDoc.BeginUndoRecord("Delete Brep");
+
+                            // Delete object
+                            RhinoDoc.Objects.Delete(obj.Id, false);
+
+                            // Finish the undo record
+                            RhinoDoc.EndUndoRecord(undo);
+
+
+                        }
                     }
 
                     // Remember to redraw the view for more smooth interaction
@@ -352,10 +389,12 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 {
 
                     BrepItemViewModel ii = Breps.Where(b => b.Guid == item.Id).FirstOrDefault();
-                    if (ii != null/* && !SelectedBreps.Contains(ii)*/)
+                    if (ii != null && !SelectedBreps.Contains(ii))
                     {
+                        
                         // Add to the selected collection which should update UI with the listview binding
-                        SelectedBreps.Add(ii); // here was my NULL error??? list is null
+                        
+                            SelectedBreps.Add(ii); // here was my NULL error??? list is null
 
                     }
                 }
@@ -363,10 +402,12 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 {
 
                     BrepItemViewModel iii = SelectedBreps.Where(b => b.Guid == item.Id).FirstOrDefault();
-                    if (iii != null)
+                    if (iii != null && SelectedBreps.Contains(iii))
                     {
+                        
                         // Remove from the selected collection which should update UI with the listview binding
-                        SelectedBreps.Remove(iii);
+                        
+                            SelectedBreps.Remove(iii);
                     }
                 }
             }

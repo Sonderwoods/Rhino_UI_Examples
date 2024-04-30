@@ -32,8 +32,15 @@
         <Label Grid.Row="1" Grid.Column="1" Content="{Binding BrepCount, Mode=OneWay}" ContentStringFormat="Breps in the file: {0:0}" d:Content="0"/>
         <ScrollViewer Grid.Row="2" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto" >
 
-            <ListView x:Name="BrepListView" SelectionMode="Multiple" SelectionChanged="BrepListView_SelectionChanged"
-                      ItemsSource="{Binding Breps, Mode=OneWay}" SelectedItem="{Binding SelectedBreps, Mode=TwoWay}" d:ItemsSource="{d:SampleData ItemCount=5}">
+            <ListView x:Name="BrepListView" SelectionMode="Multiple"
+                      ItemsSource="{Binding Breps, Mode=OneWay}" d:ItemsSource="{d:SampleData ItemCount=5}">
+
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+
                 <ListView.View>
                     <GridView  ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
 
@@ -44,7 +51,9 @@
                         <GridViewColumn Header="Delete">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button x:Name="BtnDeleteItem" Content="Delete" Command="{Binding DeleteBrepCommand}" CommandParameter="{Binding}" Height="15" FontSize="8" Padding="1" />
+                                    <Button x:Name="BtnDeleteItem" Content="Delete"
+                                            Command="{Binding Path=DataContext.DeleteBrepCommand,RelativeSource={RelativeSource AncestorType=ListView}}"
+                                            CommandParameter="{Binding}" Height="15" FontSize="8" Padding="1" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

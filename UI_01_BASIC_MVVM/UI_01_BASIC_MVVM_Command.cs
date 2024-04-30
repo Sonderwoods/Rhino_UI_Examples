@@ -5,6 +5,7 @@ using Rhino.Input;
 using Rhino.Input.Custom;
 using System;
 using System.Collections.Generic;
+using System.Windows.Interop;
 using UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View;
 
 namespace UI_01_BASIC_MVVM
@@ -26,10 +27,15 @@ namespace UI_01_BASIC_MVVM
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-
             var window = new AddBrepView(doc);
 
-            
+
+            // Make sure that we are a child of the Rhino window!
+            _ = new WindowInteropHelper(window)
+            {
+                Owner = RhinoApp.MainWindowHandle()
+            };
+
             window.Show();
 
             return Result.Success;

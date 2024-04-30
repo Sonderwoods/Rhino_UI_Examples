@@ -1,6 +1,8 @@
 ﻿using Rhino;
+using Rhino.UI;
 using System.Windows;
 using System.Windows.Controls;
+using UI_01_BASIC_MVVM.BindingHelpers;
 using UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel;
 
 
@@ -24,8 +26,15 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View
 
             DataContext = new AddBrepViewModel(doc);
 
-            //this.Closed += (s, e) => ViewModel?.Dispose();
+            Closing += (s, e) => ViewModel?.Dispose();
+
+
+
             InitializeComponent();
+
+            //in codebehind:
+            var binder = new SelectedItemsBinder(BrepListView, ViewModel.SelectedBreps);
+            binder.Bind();
 
         }
 
