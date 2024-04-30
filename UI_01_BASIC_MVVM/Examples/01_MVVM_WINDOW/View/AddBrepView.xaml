@@ -10,30 +10,68 @@
         ResizeMode="CanResizeWithGrip"
         SizeToContent="WidthAndHeight"
         Title="AddBrepView"
-        Height="450" Width="600">
+        Height="350"
+        Width="500"
+        MinHeight="250"
+        MinWidth="400">
+    
+    <!-- 
+    x:class: is the codebehind class (AddBrepView.xaml.cs)
+    xmlns: default xaml namespace
+    x: is a xaml standard namespace
+    d: is blend for previews in VS
+    mc: is a markup compatibility namespace
+    vm: is a namespace to our viewmodel
+    local: is a namespace to our view
+    d:DataContext is used for design time data (vs preview)
+    mc:Ignorable is used to ignore the d:DataContext in runtime
+    ResizeMode is set to CanResizeWithGrip to allow resizing
+    -->
+    
+    <!-- Attention that DataContext is not set here - I chose to set in the codebehind (AddBrepView.xaml.cs) -->
+    <!-- That way I could inject the RhinoDoc -->
+    
+    <!-- Hide headers in grid view -->
     <Window.Resources>
         <Style x:Key="hiddenHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Visibility" Value="Collapsed" />
         </Style>
     </Window.Resources>
+
     
+    <!-- Setup main grid. Alternatively we could use a stackpanel and have padding on all items -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" MinHeight="20"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="20"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
-        <Label Grid.Row="1" Grid.Column="1" Content="{Binding BrepCount, Mode=OneWay}" ContentStringFormat="Breps in the file: {0:0}" d:Content="0"/>
-        <ScrollViewer Grid.Row="2" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto" >
+        
+        <!-- Title with counts -->
+        <StackPanel Grid.Row="1" Grid.Column="1">
+            <Label Grid.Row="1" Grid.Column="1" Content="{Binding BrepCount, Mode=OneWay}" ContentStringFormat="Breps in the file: {0:0}" d:Content="0"/>
+            <Label Grid.Row="1" Grid.Column="1" Content="{Binding SelectedBrepCount, Mode=OneWay}" ContentStringFormat="Selected: {0:0}" d:Content="0"/>
+        </StackPanel>
 
+        
+        <!-- Wrapping our list in a scroll viewer -->
+        <ScrollViewer Grid.Row="2" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
+
+            
+            <!-- We bind the list to Breps in our viewmodel (AddBrepViewModel.cs) -->
+            <!-- The d:ItemsSource gives us the preview in VS -->
             <ListView x:Name="BrepListView" SelectionMode="Multiple"
                       ItemsSource="{Binding Breps, Mode=OneWay}" d:ItemsSource="{d:SampleData ItemCount=5}">
+                
+                <!-- We could use SelectedItem with binding but I had issues with multiple items
+                    Instead im using the below to set selection on a dependency property on each item 
+                    This binds UI selection to the IsSelected property on the BrepItemViewModel -->
 
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
@@ -44,31 +82,26 @@
                 <ListView.View>
                     <GridView  ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
 
-                        <!-- Here we create what each item should look like -->
+                        <!-- Here we create what each should look like -->
+                        <!-- the datacontext here is automatically set to our Breps collection in the ListView
+                            This means that Guid, Name etc are (dependency)properties of the BrepItemViewModel -->
                         <GridViewColumn Header="Guid" DisplayMemberBinding="{Binding Guid}"/>
                         <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="70"/>
                         <GridViewColumn Header="Area" DisplayMemberBinding="{Binding Area, StringFormat={}{0:0.0}}" Width="60"/>
+                        
+                        <!-- Instead of text we insert a button in the Delete Column -->
                         <GridViewColumn Header="Delete">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
+                                    <!-- The Command of the button needs to bind to our main viewmodel (AddBrepViewModel.cs) 
+                                    However, the DataContext of the button is the BrepItemViewModel.
+                                    The workaround is to use RelativeSource to find the parent ListView and then the DataContext of that -->
                                     <Button x:Name="BtnDeleteItem" Content="Delete"
                                             Command="{Binding Path=DataContext.DeleteBrepCommand,RelativeSource={RelativeSource AncestorType=ListView}}"
                                             CommandParameter="{Binding}" Height="15" FontSize="8" Padding="1" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-
-
-                        <!-- Here we create what each item should look like -->
-                        <!--<Border BorderBrush="Black" BorderThickness="1" Padding="2" Margin="-1">
-                            
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="{Binding Path=Guid}"/>
-                            <Label Content="{Binding Path=Name}"/>
-                                <Label Content="{Binding Path=Name}"/>
-                                <Button x:Name="BtnDeleteItem" Content="Delete" Click="BtnDeleteItem_Click" />
-                        </StackPanel>
-                        </Border>-->
 
                     </GridView>
                 </ListView.View>
