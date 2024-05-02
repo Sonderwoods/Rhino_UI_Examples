@@ -27,7 +27,7 @@ namespace UI_01_BASIC_MVVM
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            var window = new AddBrepView(doc);
+            var window = new BrepOverviewView(doc);
 
 
             // Make sure that we are a child of the Rhino window!

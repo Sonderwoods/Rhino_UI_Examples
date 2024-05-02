@@ -1,18 +1,12 @@
 ﻿using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
-using Rhino.UI;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using UI_01_BASIC_MVVM.Commands;
 
 namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
@@ -30,7 +24,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
     /// 
     /// Slightly unsure whether we need to implement IDisposable for this class, but im using it as we are subscribing to events and we should unsubscribe.
     /// </summary>
-    public class AddBrepViewModel : INotifyPropertyChanged, IDisposable
+    public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
 
         /// <summary>
@@ -77,7 +71,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <summary>
         /// This is the collection of selected breps that we will bind to in the xaml.
         /// As a point of departure it should never contain any brep that is not part of the Breps collection.
-        /// Handling happens here <see cref="select"/>
+        /// Handling happens here <see cref="SelectedBreps_CollectionChanged"/>
         /// </summary>
         public ObservableCollection<BrepItemViewModel> SelectedBreps { get; set; } = new ObservableCollection<BrepItemViewModel>();
 
@@ -85,19 +79,9 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         // Commands
         public RelayCommand DeleteBrepCommand { get; set; }
 
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        void DeleteGuid(BrepItemViewModel item)
-        {
-            if (Breps.Contains(item))
-            {
-                Breps.Remove(item);
-
-            }
-        }
-
-
-
-        public AddBrepViewModel(RhinoDoc doc)
+        public MainViewModel(RhinoDoc doc)
         {
             RhinoDoc = doc;
 
@@ -119,6 +103,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             // TODO:
             //Rhino.Commands.Command.UndoRedo += Command_UndoRedo;
         }
+
 
         private void InitializeCommands()
         {
@@ -149,19 +134,17 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
         private void RhinoDoc_DeselectAll(object sender, RhinoDeselectAllObjectsEventArgs e)
         {
-            SelectedBreps.Clear();
 
-            foreach (var item in Breps)
+            // Clear for some reason is not triggering WPF..
+            //SelectedBreps.Clear();
+            //OnPropertyChanged(nameof(SelectedBreps));
+
+            for (int i = SelectedBreps.Count - 1; i >= 0; i--)
             {
-                item.IsSelected = false;
+                SelectedBreps.RemoveAt(i);
             }
-
         }
 
-        private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
-        {
-            RhinoDoc_AddObject(sender, e);
-        }
 
         /// <summary>
         /// Removes the event handlers from the RhinoDoc
@@ -212,12 +195,15 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 // We deselected in the UI -> Removed from collection -> Deselect in Rhino
                 case NotifyCollectionChangedAction.Remove:
                     //RhinoApp.WriteLine("SelectedBreps_CollectionChanged Remove");
+
+
                     foreach (BrepItemViewModel item in e.OldItems)
                     {
                         RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
                         obj?.Select(false);
                     }
                     RhinoDoc.Views.Redraw();
+
                     break;
 
                 // Just showcasing other options you can play with
@@ -226,6 +212,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
                 case NotifyCollectionChangedAction.Move:
                     break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    break;
+
 
 
 
@@ -246,12 +236,6 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    //BrepCount = Breps.Count;
-                    //foreach (BrepItemViewModel item in e.NewItems)
-                    //{
-                    //    RhinoObject obj = RhinoDoc.Objects.Find(item.Guid);
-                    //    obj?.Select(true);
-                    //}
                     break;
 
 
@@ -283,7 +267,6 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                         }
                     }
 
-                    //brepCount = Breps.Count;
 
                     // Remember to redraw the view for more smooth interaction
                     RhinoDoc.Views.Redraw();
@@ -298,7 +281,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
             BrepCount = Breps.Count;
             SelectedBrepCount = SelectedBreps.Count;
-            
+
         }
 
         /// <summary>
@@ -309,7 +292,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <param name="e"></param>
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
-            var item = Breps.Where(b => b.Guid == e.RhinoObject.Id).FirstOrDefault();
+            BrepItemViewModel item = Breps.Where(b => b.Guid == e.RhinoObject.Id).FirstOrDefault();
 
             if (item != null)
             {
@@ -403,36 +386,37 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <param name="e"></param>
         private void RhinoDoc_SelectObjects(object sender, RhinoObjectSelectionEventArgs e)
         {
-            // This SHOULDNT be needed as it is instanciated in the property declaration.
-            // I had a null bug though at some point so I'm keeping it here for now.
-            if (SelectedBreps == null)
-                SelectedBreps = new ObservableCollection<BrepItemViewModel>();
+            //// This SHOULDNT be needed as it is instanciated in the property declaration.
+            //// I had a null bug though at some point so I'm keeping it here for now.
+            //if (SelectedBreps == null)
+            //    SelectedBreps = new ObservableCollection<BrepItemViewModel>();
 
             // Loop through all the objects that are selected or deselected in the event
+
+            RhinoApp.WriteLine(e.Selected ? "Selected" : "Deselected");
+
             foreach (var item in e.RhinoObjects)
             {
                 if (e.Selected)
                 {
-
+                    // It exists in Breps so we add it to SelectedBreps
                     BrepItemViewModel ii = Breps.Where(b => b.Guid == item.Id).FirstOrDefault();
                     if (ii != null && !SelectedBreps.Contains(ii))
                     {
 
                         // Add to the selected collection which should update UI with the listview binding
-
-                        SelectedBreps.Add(ii); // here was my NULL error??? list is null
+                        SelectedBreps.Add(ii);
 
                     }
                 }
                 else
                 {
-
+                    // It exists in selectedBreps so we remove it from selectedBreps
                     BrepItemViewModel iii = SelectedBreps.Where(b => b.Guid == item.Id).FirstOrDefault();
                     if (iii != null && SelectedBreps.Contains(iii))
                     {
 
                         // Remove from the selected collection which should update UI with the listview binding
-
                         SelectedBreps.Remove(iii);
                     }
                 }
@@ -444,27 +428,22 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
         }
 
-        /// <summary>
-        /// This method is called when the user selects or deselects objects in the listview.
-        /// This should NOT be used as we have direct binding if it works...
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void BrepListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void DeleteGuid(BrepItemViewModel item)
         {
+            if (Breps.Contains(item))
+            {
+                Breps.Remove(item);
 
-            foreach (BrepItemViewModel itemVM in e.AddedItems)
-            {
-                RhinoDoc.Objects.Find(itemVM.Guid)?.Select(true);
-            }
-            foreach (BrepItemViewModel itemVM in e.RemovedItems)
-            {
-                RhinoDoc.Objects.Find(itemVM.Guid)?.Select(false);
             }
         }
 
+        private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            RhinoDoc_AddObject(sender, e);
+        }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+
+
 
 
         /// <summary>
@@ -482,8 +461,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
 
         /// <summary>
-        ///     Checks if a property already matches a desired value.  Sets the property and
-        ///     notifies listeners only when necessary.
+        ///     Checks if a property already matches a desired value.
+        ///     Sets the property and notifies listeners only when necessary.
         ///     Source: https://www.danrigby.com/2015/09/12/inotifypropertychanged-the-net-4-6-way/
         /// </summary>
         /// <typeparam name="T">Type of the property.</typeparam>
