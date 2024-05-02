@@ -32,9 +32,11 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View
 
             InitializeComponent();
 
-            //in codebehind:
+            //Need some codebehind binding between the listview and the inotifycollection:
             var binder = new SelectedItemsBinder(BrepListView, ViewModel.SelectedBreps);
             binder.Bind();
+
+            
 
         }
 

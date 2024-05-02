@@ -8,11 +8,11 @@ using System.Collections.Generic;
 using System.Windows.Interop;
 using UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.View;
 
-namespace UI_01_BASIC_MVVM
+namespace UI_01_BASIC_MVVM.RhinoCommands
 {
-    public class UI_01_BASIC_MVVM_Command : Command
+    public class UI_01_MVVM_WindowCommand : Command
     {
-        public UI_01_BASIC_MVVM_Command()
+        public UI_01_MVVM_WindowCommand()
         {
             // Rhino only creates one instance of each command class defined in a
             // plug-in, so it is safe to store a refence in a static property.
@@ -20,10 +20,10 @@ namespace UI_01_BASIC_MVVM
         }
 
         ///<summary>The only instance of this command.</summary>
-        public static UI_01_BASIC_MVVM_Command Instance { get; private set; }
+        public static UI_01_MVVM_WindowCommand Instance { get; private set; }
 
         ///<returns>The command name as it appears on the Rhino command line.</returns>
-        public override string EnglishName => "UI_01_BASIC_MVVM_Command";
+        public override string EnglishName => "UI_01_MVVM_WINDOW";
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {

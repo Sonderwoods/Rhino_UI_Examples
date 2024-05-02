@@ -31,22 +31,6 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         public Guid Guid { get; set; }
 
 
-
-
-        //public bool IsSelected
-        //{
-        //    get { return (bool)GetValue(IsSelectedProperty); }
-        //    set { SetValue(IsSelectedProperty, value); }
-        //}
-
-        //// Using a DependencyProperty as the backing store for IsSelected.  This enables animation, styling, binding, etc...
-        //public static readonly DependencyProperty IsSelectedProperty =
-        //    DependencyProperty.Register("IsSelected", typeof(bool), typeof(BrepItemViewModel), new PropertyMetadata(false));
-
-
-
-
-
         /// <summary>
         /// This is a dependencyproperty and will update the UI when changed.
         /// Units are in m2 no matter what the document units are. (converted at creation time)
@@ -118,7 +102,7 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         }
 
 
-        public BrepItemViewModel(Guid guid, RhinoDoc document)
+        private BrepItemViewModel(Guid guid, RhinoDoc document)
         {
             if (document != null)
             {

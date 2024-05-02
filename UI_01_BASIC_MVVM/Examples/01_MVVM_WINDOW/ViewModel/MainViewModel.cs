@@ -46,7 +46,11 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         public int BrepCount
         {
             get { return brepCount; }
-            set { SetProperty(ref brepCount, value); }
+            set
+            {
+                HasAnyBreps = value > 0;
+                SetProperty(ref brepCount, value);
+            }
         }
         // END PROPFULL
 
@@ -57,6 +61,19 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             get { return selectedBrepCount; }
             set { SetProperty(ref selectedBrepCount, value); }
         }
+
+
+        private bool hasAnyBreps;
+
+        public bool HasAnyBreps
+        {
+            get { return hasAnyBreps; }
+            set { SetProperty(ref hasAnyBreps, value); }
+        }
+
+
+
+       
 
 
 
@@ -96,6 +113,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                     Breps.Add(item);
             }
 
+
+            
             InitializeCommands();
 
 
@@ -386,18 +405,13 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
         /// <param name="e"></param>
         private void RhinoDoc_SelectObjects(object sender, RhinoObjectSelectionEventArgs e)
         {
-            //// This SHOULDNT be needed as it is instanciated in the property declaration.
-            //// I had a null bug though at some point so I'm keeping it here for now.
-            //if (SelectedBreps == null)
-            //    SelectedBreps = new ObservableCollection<BrepItemViewModel>();
-
-            // Loop through all the objects that are selected or deselected in the event
 
             RhinoApp.WriteLine(e.Selected ? "Selected" : "Deselected");
 
-            foreach (var item in e.RhinoObjects)
+            // Loop through all the objects that are selected or deselected in the event
+            if (e.Selected)
             {
-                if (e.Selected)
+                foreach (var item in e.RhinoObjects)
                 {
                     // It exists in Breps so we add it to SelectedBreps
                     BrepItemViewModel ii = Breps.Where(b => b.Guid == item.Id).FirstOrDefault();
@@ -409,7 +423,10 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
 
                     }
                 }
-                else
+            }
+            else
+            {
+                foreach (var item in e.RhinoObjects)
                 {
                     // It exists in selectedBreps so we remove it from selectedBreps
                     BrepItemViewModel iii = SelectedBreps.Where(b => b.Guid == item.Id).FirstOrDefault();
