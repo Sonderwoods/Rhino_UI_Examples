@@ -23,3 +23,4 @@ Here I'll try to share my journey learning WPF, ETO and the MVVM pattern in C# f
 - Matthew McDonald: Pro WPF 4.5 in C#
 - Kunal Chowdhury: Windows Presentation Foundation Development Cookbook
 - Pavel Yosifovich: Windows Presentation Foundation 4.5 Cookbook
+- VS template for Eto forms: https://marketplace.visualstudio.com/items?itemName=CurtisWensley.EtoFormsVisualStudioAddin
