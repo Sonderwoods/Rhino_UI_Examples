@@ -5,6 +5,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+//using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UI_01_BASIC_MVVM.Commands;
@@ -62,6 +63,8 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
             set { SetProperty(ref selectedBrepCount, value); }
         }
 
+        
+
 
         private bool hasAnyBreps;
 
@@ -112,7 +115,6 @@ namespace UI_01_BASIC_MVVM.Examples._01_MVVM_WINDOW.ViewModel
                 if (item != null)
                     Breps.Add(item);
             }
-
 
             
             InitializeCommands();
