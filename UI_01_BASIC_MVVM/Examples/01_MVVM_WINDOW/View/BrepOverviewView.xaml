@@ -37,7 +37,7 @@
         <Style x:Key="hiddenHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Visibility" Value="Collapsed" />
         </Style>
-
+        
         <converters:InverseVisibilityConverter x:Key="InverseVisibilityConverter"/>
         <converters:VisibilityConverter x:Key="VisibilityConverter"/>
     </Window.Resources>
@@ -95,7 +95,7 @@
             
             <!-- The d:ItemsSource gives us the preview in VS -->
             <ListView x:Name="BrepListView" SelectionMode="Multiple"
-                      ItemsSource="{Binding Breps, Mode=OneWay}" d:ItemsSource="{d:SampleData ItemCount=5}">
+                      ItemsSource="{Binding Breps, Mode=OneWay}" d:ItemsSource="{d:SampleData ItemCount=4}">
            
                 <ListView.View>
                     <GridView  ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
